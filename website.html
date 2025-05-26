@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Study Smarter</title>
+<style>
+  body {
+    margin: 0;
+    overflow:hidden/* Hide scrollbars if iframe is full screen */
+    font-family: sans-serif;
+  }
+
+  /* The website playing in the background */
+  #background-iframe {
+    position: fixed; /* Stays in place */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full screen width */
+    height: 100vh; /* Full screen height */
+    border: none;
+    z-index: -1; /* Puts it behind everything else */
+    pointer-events: none; /* KEY: Makes it non-clickable, clicks go through it */
+    opacity: 0.5; 
+    /* Makes it a bit transparent */
+  }
+
+    #foreground-content {
+    position: relative; /* Essential for z-index to work */
+    z-index: 1; /* Puts it on top of the iframe */
+    width: 100vw;   /* Covers the entire viewport width */
+    /* Covers the entire viewport height */
+    padding: 20px;  /* Add some padding so content isn't right at the edge */
+    box-sizing: border-box; /* Include padding in width/height calculation */
+    background-color: rgba(255, 255, 255, 0.2); /* VERY transparent white overlay */
+    /* Remove border-radius, box-shadow, margin to make it a full page overlay */
+    display: flex; /* Use flexbox to easily center content vertically and horizontally */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  
+</style>
+</head>
+<body>
+
+  <iframe id="background-iframe" src="backgroundflappy.html"></iframe>
+
+  <div id="foreground-content">
+    
+  </div>
+
+</body>
+</html>
