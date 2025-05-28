@@ -1,57 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Study Smarter</title>
-<style>
-  body {
-    margin: 0;
-    overflow:hidden/* Hide scrollbars if iframe is full screen */
-    font-family: sans-serif;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Main Website with Background Animation</title>
+    <style>
+        /* Your main website's styling goes here */
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
 
-  /* The website playing in the background */
-  #background-iframe {
-    position: fixed; /* Stays in place */
-    width: 100vw; /* Full screen width */
-    height: 100vh;
-     /* Full screen width */
-    /* Full screen height */
-    border: none;
-    z-index: -1; /* Puts it behind everything else */
-    pointer-events: none; /* KEY: Makes it non-clickable, clicks go through it */
-    opacity: 0.5; 
-    /* Makes it a bit transparent */
-  }
+        h1 {
+            color: #333;
+        }
 
-    
-      #foreground-content {
-    position: relative;
-    z-index: 1;
-    width: 100vw;
-    height: 100vh; /* Add this line to make it full screen height */
-    padding: 20px;
-    box-sizing: border-box;
-    background-color: rgba(255, 255, 255, 0.2);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-      }
-      /* Covers the entire viewport width */
-    /* Covers the entire viewport height */
-    
+        p {
+            color: #666;
+        }
 
-  
-</style>
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: none;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        /* --- STYLES FOR THE BACKGROUND IFRAME --- */
+        #backgroundAnimationFrame {
+            position: fixed; /* Keep it in the same place even if the user scrolls */
+            top: 0;
+            left: 0;
+            width: 100%;    /* Make it tiny */
+            height: 100%;   /* Make it tiny */
+            opacity: 100;    /* Make it completely invisible */
+            pointer-events: none; /* Crucial: Prevents any mouse/touch interaction */
+            z-index: -1;   /* Send it behind all other content */
+            border: none;  /* Remove any default iframe border */
+        }
+    </style>
 </head>
 <body>
 
-  <iframe id="background-iframe" src="backgroundflappy.html"></iframe>
+    <h1>Welcome to My Interactive Website!</h1>
+    <p>Feel free to click around and explore. This content is fully interactive.</p>
+    <button onclick="alert('You clicked a button on the main site!')">Interact with Me</button>
 
-  <div id="foreground-content">
-    <p>hello</p<p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p><p>hello</p>
-  </div>
+    <iframe id="backgroundAnimationFrame" src="flappygpt.html" frameborder="0"></iframe>
 
 </body>
 </html>
