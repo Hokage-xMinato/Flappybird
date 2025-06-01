@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Flappy Bird Auto-Play</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background-color: #70c5ce; /* Default background, will be overridden by game-container */
+                font-family: Arial, sans-serif;
+                overflow: hidden; /* Prevent scrollbars from background elements */
+            }
+
+            #game-container {
+                position: relative;
+                width: 400px;
+                height: 600px;
+                overflow: hidden;
+                /* Removed background-color here to allow sky to show through */
+                /* Removed border: 2px solid #000; */
+                background: linear-gradient(to bottom, #70c5ce 0%, #70c5ce 70%, #50a0b0 100%); /* Blue sky gradient */
+            }
+
+            #sky-background {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%; /* Covers the whole game container */
+                background: linear-gradient(to bottom, #70c5ce 0%, #70c5ce 70%, #50a0b0 100%); /* Blue sky gradient */
+                z-index: 1; /* Below other game elements */
+            }
+
+            .cloud {
+                position: absolute;
+                background-color: white;
+                border-radius: 50%;
+                opacity: 0.8;
+                z-index: 2; /* Above sky, below pipes/bird */
+                animation: moveClouds linear infinite;
+            }
+
+            .cloud:nth-child(1) {
+                width: 80px;
+                height: 40px;
+                top: 50px;
+                left: 10%;
+                animation-duration: 25s;
+            }
+
+            .cloud:nth-child(2) {
+                width: 120px;
+                height: 60px;
+                top: 120px;
+                left: 60%;
+                animation-duration: 30s;
+            }
+
+            .cloud:nth-child(3) {
+                width: 60px;
+                height: 30px;
+                top: 80px;
+                left: 30%;
+                animation-duration: 20s;
+            }
+
+            @keyframes moveClouds {
+                0% {
+                    transform: translateX(400px);
+                } /* Start off-screen right */
+                100% {
+                    transform: translateX(-150px);
+                } /* End off-screen left */
+            }
+
+            #buildings-background {
+                position: absolute;
+                bottom: 100px; /* Position above the ground */
+                left: 0;
+                width: 200%; /* Double width to allow for continuous scrolling */
+                height: 150px; /* Height of the buildings */
+                background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 150"><rect x="0" y="50" width="50" height="100" fill="%236e6e6e"/><rect x="60" y="80" width="40" height="70" fill="%235a5a5a"/><rect x="110" y="30" width="70" height="120" fill="%236e6e6e"/><rect x="190" y="60" width="45" height="90" fill="%235a5a5a"/><rect x="245" y="40" width="55" height="110" fill="%236e6e6e"/><rect x="310" y="70" width="35" height="80" fill="%235a5a5a"/><rect x="355" y="90" width="40" height="60" fill="%236e6e6e"/></svg>');
+                background-repeat: repeat-x;
+                background-size: 400px 150px; /* Size of one set of buildings */
+                z-index: 3; /* Below pipes, above sky/clouds */
+                animation: scrollBuildings linear infinite;
+                animation-duration: 10s; /* Adjust speed as needed */
+            }
+
+            @keyframes scrollBuildings {
+                0% {
+                    transform: translateX(0);
+                }
+                100% {
+                    transform: translateX(-400px);
+                } /* Moves one full background width */
+            }
+
+            #ground {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 200%; /* Double width for continuous scrolling */
+                height: 100px; /* Height of the ground */
+                background: linear-gradient(to top, #8B4513 0%, #A0522D 50%, #CD853F 100%); /* Brown gradient for ground */
+                z-index: 15; /* Above pipes and bird for visual effect */
+                animation: scrollGround linear infinite;
+                animation-duration: 5s; /* Adjust speed to match gameSpeed if desired */
+            }
+
+            @keyframes scrollGround {
+                0% {
+                    transform: translateX(0);
+                }
+                100% {
+                    transform: translateX(-400px);
+                } /* Moves one full game width */
+            }
+
+            #bird {
+                position: absolute;
+                width: 40px;
+                height: 30px;
+                background-color: #ffeb3b;
+                border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+                z-index: 10;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #bird .eye {
+                position: absolute;
+                width: 7px;
+                height: 7px;
+                background-color: white;
+                border: 1px solid #333;
+                border-radius: 50%;
+                top: 8px;
+                left: 25px;
+                z-index: 1;
+            }
+
+            #bird .eye::after {
+                content: '';
+                position: absolute;
+                width: 3px;
+                height: 3px;
+                background-color: #333;
+                border-radius: 50%;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            #bird .wing {
+                position: absolute;
+                width: 18px;
+                height: 12px;
+                background-color: #f9a825;
+                border: 1px solid #e69500;
+                border-radius: 30% 70% 70% 30% / 50% 50% 50% 50%;
+                top: 10px;
+                left: 3px;
+                z-index: 0;
+                transform-origin: 80% 20%;
+                animation: flap 0.25s infinite alternate ease-in-out;
+            }
+
+            @keyframes flap {
+                0% {
+                    transform: rotate(-20deg);
+                }
+                100% {
+                    transform: rotate(20deg);
+                }
+            }
+
+            .pipe {
+                position: absolute;
+                width: 60px;
+                background-color: #4caf50;
+                border: 2px solid #2e7d32;
+                box-sizing: border-box;
+                z-index: 5; /* Ensure pipes are above background but below ground */
+            }
+
+            .pipe-top {
+                top: 0;
+            }
+
+            .pipe-bottom {
+                bottom: 0;
+            }
+
+            #score-display {
+                position: absolute;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 24px;
+                color: white;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+                z-index: 20;
+            }
+
+            #game-over {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                display: none;
+                z-index: 30;
+            }
+
+            #restart-btn {
+                margin-top: 10px;
+                padding: 8px 16px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            #controls {
+                position: absolute;
+                bottom: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                color: white;
+                font-size: 14px;
+                z-index: 20;
+            }
+
+            #toggle-autoplay-btn {
+                margin-top: 5px;
+                padding: 8px 16px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="game-container">
+            <div id="sky-background">
+                <div class="cloud"></div>
+                <div class="cloud"></div>
+                <div class="cloud"></div>
+            </div>
+            <div id="buildings-background"></div>
+            <div id="bird">
+                <div class="eye"></div>
+                <div class="wing"></div>
+            </div>
+            <div id="score-display">0</div>
+            <div id="game-over">
+                <h2>Game Over</h2>
+                <p>Score: <span id="final-score">0</span>
+                </p>
+                <button id="restart-btn">Play Again</button>
+            </div>
+            <div id="controls">
+                <span id="autoplay-status">Auto-play enabled</span>
+                <br>
+                <button id="toggle-autoplay-btn">Toggle Auto-Play</button>
+            </div>
+            <div id="ground"></div>
+        </div>
+        <script>
+            // Game variables
+            const gameContainer = document.getElementById('game-container');
+            const bird = document.getElementById('bird');
+            const scoreDisplay = document.getElementById('score-display');
+            const gameOverDisplay = document.getElementById('game-over');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const restartBtn = document.getElementById('restart-btn');
+            const toggleAutoplayBtn = document.getElementById('toggle-autoplay-btn');
+            const autoplayStatus = document.getElementById('autoplay-status');
+
+            // Get the ground element
+            const ground = document.getElementById('ground');
+            const buildingsBackground = document.getElementById('buildings-background');
+
+            let birdY = 300;
+            let birdVelocity = 0;
+            let gravity = 0.5;
+            let jumpForce = -10;
+            let gameWidth = 400;
+            let gameHeight = 600;
+            let pipes = [];
+            let score = 0;
+            let gameSpeed = 2; // This controls the speed of pipes and background elements
+            let pipeGap = 200;
+            let pipeFrequency = 1500; // ms
+            let gameRunning = false;
+            let animationId;
+            let lastPipeTime = 0;
+            let autoplayEnabled = true; // New variable to control auto-play
+
+            // Ground and Building animation control (matching gameSpeed)
+            let groundAnimationSpeed = gameSpeed * 2.5; // Adjust multiplier for desired speed
+            let buildingsAnimationSpeed = gameSpeed * 2; // Slightly slower than ground for parallax
+
+            // Initialize game
+            function initGame() {
+                birdY = 300;
+                birdVelocity = 0;
+                pipes = [];
+                score = 0;
+                scoreDisplay.textContent = '0';
+                gameRunning = true;
+                gameOverDisplay.style.display = 'none';
+
+                // Clear existing pipes
+                document.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+
+                // Position bird
+                bird.style.top = birdY + 'px';
+                bird.style.left = '100px';
+
+                lastPipeTime = Date.now();
+
+                // Update auto-play status display
+                updateAutoplayStatus();
+
+                // Reset ground and building animations (by restarting them)
+                ground.style.animation = 'none';
+                buildingsBackground.style.animation = 'none';
+                void ground.offsetWidth; // Trigger reflow
+                void buildingsBackground.offsetWidth; // Trigger reflow
+                ground.style.animation = `scrollGround ${gameWidth / groundAnimationSpeed}s linear infinite`;
+                buildingsBackground.style.animation = `scrollBuildings ${gameWidth / buildingsAnimationSpeed}s linear infinite`;
+
+                // Start game loop
+                gameLoop();
+            }
+
+            // Game loop
+            function gameLoop() {
+                if (!gameRunning) return;
+
+                const currentTime = Date.now();
+
+                // Auto-play: make the bird jump when it's too low or about to hit a pipe, ONLY if autoplayEnabled
+                if (autoplayEnabled) {
+                    autoJump();
+                }
+
+                // Update bird position
+                birdVelocity += gravity;
+                birdY += birdVelocity;
+                bird.style.top = birdY + 'px';
+
+                // Generate new pipes
+                if (currentTime - lastPipeTime > pipeFrequency) {
+                    createPipe();
+                    lastPipeTime = currentTime;
+                }
+
+                // Move pipes
+                movePipes();
+
+                // Check collisions
+                // Adjusted collision check for ground - bird now hits the ground at gameHeight - ground.height
+                if (checkCollisions()) {
+                    gameOver();
+                    return;
+                }
+
+                // Update score
+                updateScore();
+
+                animationId = requestAnimationFrame(gameLoop);
+            }
+
+            // Auto-jump logic
+            function autoJump() {
+                // Determine the effective "ground" height for bird collision prediction
+                const effectiveGroundHeight = gameHeight - ground.offsetHeight;
+
+                // Check if bird is too low relative to the new ground
+                if (birdY > effectiveGroundHeight - 50) { // Keep a buffer from the ground
+                    jump();
+                    return;
+                }
+
+                // Check upcoming pipes
+                for (const pipe of pipes) {
+                    // If pipe is close and bird is below the gap
+                    if (pipe.x < 200 && pipe.x > 50) {
+                        const gapCenter = pipe.gapY + pipe.gapHeight / 2;
+                        const buffer = 30; // How close to center we want to be
+
+                        // If bird is below the center of the gap
+                        if (birdY > gapCenter + buffer) {
+                            jump();
+                            return;
+                        }
+                        // If bird is above the center of the gap (and not dangerously low overall)
+                        else if (birdY < gapCenter - buffer && birdY > 50) { // Added a check to not let bird go too high unnecessarily
+                            // Don't jump, let gravity handle it
+                            return;
+                        }
+                    }
+                }
+
+                // If bird is getting too low generally, even without an immediate pipe threat
+                if (birdY > effectiveGroundHeight - 100) {
+                    jump();
+                }
+            }
+
+            // Create a new pipe
+            function createPipe() {
+                // Ensure pipes don't spawn below the ground level
+                const minPipeTopHeight = 50; // Minimum height for the top pipe
+                const maxPipeBottomHeight = gameHeight - ground.offsetHeight - 50; // Max bottom pipe height from top of container
+                const maxGapY = maxPipeBottomHeight - pipeGap;
+
+                const gapY = Math.random() * (maxGapY - minPipeTopHeight) + minPipeTopHeight;
+
+                const pipeTop = document.createElement('div');
+                pipeTop.className = 'pipe pipe-top';
+                pipeTop.style.left = gameWidth + 'px';
+                pipeTop.style.height = gapY + 'px';
+                gameContainer.appendChild(pipeTop);
+
+                const pipeBottom = document.createElement('div');
+                pipeBottom.className = 'pipe pipe-bottom';
+                pipeBottom.style.left = gameWidth + 'px';
+                // Calculate bottom pipe height so it sits exactly on top of the ground
+                pipeBottom.style.height = (gameHeight - gapY - pipeGap - ground.offsetHeight) + 'px';
+                pipeBottom.style.bottom = ground.offsetHeight + 'px'; // Position it directly on the ground
+                gameContainer.appendChild(pipeBottom);
+
+                pipes.push({
+                    topElement: pipeTop,
+                    bottomElement: pipeBottom,
+                    x: gameWidth,
+                    gapY: gapY,
+                    gapHeight: pipeGap,
+                    passed: false
+                });
+            }
+
+            // Move all pipes
+            function movePipes() {
+                for (let i = pipes.length - 1; i >= 0; i--) {
+                    const pipe = pipes[i];
+                    pipe.x -= gameSpeed;
+                    pipe.topElement.style.left = pipe.x + 'px';
+                    pipe.bottomElement.style.left = pipe.x + 'px';
+
+                    // Remove pipes that are off screen
+                    if (pipe.x < -60) {
+                        pipe.topElement.remove();
+                        pipe.bottomElement.remove();
+                        pipes.splice(i, 1);
+                    }
+                }
+            }
+
+            // Check for collisions
+            function checkCollisions() {
+                const groundHeight = ground.offsetHeight;
+
+                // Check if bird hits the ground or ceiling
+                if (birdY >= gameHeight - bird.offsetHeight - groundHeight || birdY <= 0) {
+                    return true;
+                }
+
+                // Check if bird hits any pipes
+                const birdRect = {
+                    x: 100,
+                    y: birdY,
+                    width: 40,
+                    height: 30
+                };
+
+                for (const pipe of pipes) {
+                    const topPipeRect = {
+                        x: pipe.x,
+                        y: 0,
+                        width: 60,
+                        height: pipe.gapY
+                    };
+                    const bottomPipeRect = {
+                        x: pipe.x,
+                        y: pipe.gapY + pipe.gapHeight,
+                        width: 60,
+                        height: gameHeight - (pipe.gapY + pipe.gapHeight) - groundHeight // Adjust bottom pipe height for collision
+                    };
+
+                    if (checkRectCollision(birdRect, topPipeRect) || checkRectCollision(birdRect, bottomPipeRect)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Rectangle collision detection
+            function checkRectCollision(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+
+            // Update score when passing pipes
+            function updateScore() {
+                for (const pipe of pipes) {
+                    if (!pipe.passed && pipe.x + 60 < 100) {
+                        pipe.passed = true;
+                        score++;
+                        scoreDisplay.textContent = score;
+                    }
+                }
+            }
+
+            // Jump function
+            function jump() {
+                birdVelocity = jumpForce;
+            }
+
+            // Game over
+            function gameOver() {
+                gameRunning = false;
+                cancelAnimationFrame(animationId);
+                finalScoreDisplay.textContent = score;
+                gameOverDisplay.style.display = 'block';
+
+                // Stop ground and building animations
+                ground.style.animationPlayState = 'paused';
+                buildingsBackground.style.animationPlayState = 'paused';
+                document.querySelectorAll('.cloud').forEach(cloud => {
+                    cloud.style.animationPlayState = 'paused';
+                });
+            }
+
+            // Function to update the autoplay status display
+            function updateAutoplayStatus() {
+                autoplayStatus.textContent = `Auto-play ${autoplayEnabled ? 'enabled' : 'disabled'}`;
+            }
+
+            // Event listeners
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    if (!gameRunning) {
+                        initGame();
+                    } else if (!autoplayEnabled) { // Allow manual jump only if auto-play is off
+                        jump();
+                    }
+                    e.preventDefault();
+                }
+            });
+
+            gameContainer.addEventListener('click', () => {
+                if (!gameRunning) {
+                    initGame();
+                } else if (!autoplayEnabled) { // Allow manual jump only if auto-play is off
+                    jump();
+                }
+            });
+
+            restartBtn.addEventListener('click', initGame);
+
+            toggleAutoplayBtn.addEventListener('click', () => {
+                autoplayEnabled = !autoplayEnabled;
+                updateAutoplayStatus();
+            });
+
+            // Start game
+            initGame();
+        </script>
+    </body>
+</html>
